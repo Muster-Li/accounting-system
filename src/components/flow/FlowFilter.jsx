@@ -1,13 +1,13 @@
-import React, { useState } from 'react'
-import { RiCalendarLine, RiFilter3Line, RiSearchLine, RiDownloadLine } from 'react-icons/ri'
+import React from 'react'
+import { RiCalendarLine, RiFilter3Line, RiSearchLine } from 'react-icons/ri'
 
 /**
  * FlowFilter - 流水页筛选栏组件
+ * @param {Object} props
+ * @param {Object} props.filters - 筛选条件
+ * @param {Function} props.onFilterChange - 筛选变更回调
  */
-function FlowFilter() {
-  const [timeRange, setTimeRange] = useState('3月')
-  const [dimension, setDimension] = useState('day')
-
+function FlowFilter({ filters, onFilterChange }) {
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
       <div className="flex items-center justify-between">
@@ -15,28 +15,31 @@ function FlowFilter() {
         <div className="flex items-center gap-4">
           {/* 时间选择 */}
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100">
-              <RiCalendarLine />
-              <span>2026年</span>
-            </button>
-            <button className="flex items-center gap-1 px-3 py-1.5 text-sm text-primary-500 bg-primary-50 rounded-lg font-medium">
-              {timeRange}
-            </button>
+            <input
+              type="date"
+              value={filters.startDate}
+              onChange={(e) => onFilterChange({ startDate: e.target.value })}
+              className="px-3 py-1.5 text-sm text-gray-600 bg-gray-50 rounded-lg border-none"
+            />
+            <span className="text-gray-400">至</span>
+            <input
+              type="date"
+              value={filters.endDate}
+              onChange={(e) => onFilterChange({ endDate: e.target.value })}
+              className="px-3 py-1.5 text-sm text-gray-600 bg-gray-50 rounded-lg border-none"
+            />
           </div>
 
-          {/* 汇总维度 */}
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span>汇总：</span>
-            <select 
-              value={dimension}
-              onChange={(e) => setDimension(e.target.value)}
-              className="px-3 py-1.5 bg-gray-50 rounded-lg border-none text-gray-700 cursor-pointer"
-            >
-              <option value="day">日</option>
-              <option value="week">周</option>
-              <option value="month">月</option>
-            </select>
-          </div>
+          {/* 类型筛选 */}
+          <select
+            value={filters.type}
+            onChange={(e) => onFilterChange({ type: e.target.value })}
+            className="px-3 py-1.5 text-sm text-gray-600 bg-gray-50 rounded-lg border-none"
+          >
+            <option value="">全部类型</option>
+            <option value="expense">支出</option>
+            <option value="income">收入</option>
+          </select>
         </div>
 
         {/* 右侧操作 */}
@@ -45,7 +48,7 @@ function FlowFilter() {
           <div className="relative">
             <input
               type="text"
-              placeholder="搜索"
+              placeholder="搜索备注"
               className="pl-9 pr-4 py-1.5 text-sm bg-gray-50 rounded-lg border-none w-48"
             />
             <RiSearchLine className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -55,11 +58,6 @@ function FlowFilter() {
           <button className="flex items-center gap-1 px-3 py-1.5 text-sm text-primary-500 border border-primary-200 rounded-lg hover:bg-primary-50">
             <RiFilter3Line />
             <span>筛选</span>
-          </button>
-
-          {/* 批量操作 */}
-          <button className="flex items-center gap-1 px-3 py-1.5 text-sm text-primary-500 border border-primary-200 rounded-lg hover:bg-primary-50">
-            <span>批量操作</span>
           </button>
         </div>
       </div>

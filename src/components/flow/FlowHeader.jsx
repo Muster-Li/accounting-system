@@ -3,15 +3,10 @@ import { formatAmount } from '../../utils/helpers'
 
 /**
  * FlowHeader - 流水页顶部汇总栏组件
+ * @param {Object} props
+ * @param {Object} props.summary - 汇总数据
  */
-function FlowHeader() {
-  // 汇总数据（与截图一致）
-  const summary = {
-    balance: -10368.90,
-    income: 0.00,
-    expense: 10368.90,
-  }
-
+function FlowHeader({ summary }) {
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
       <div className="flex items-center gap-8">

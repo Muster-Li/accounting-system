@@ -20,8 +20,9 @@ export const categoriesRelations = relations(categories, ({ one, many }) => ({
   parent: one(categories, {
     fields: [categories.parentId],
     references: [categories.id],
+    relationName: 'parent',
   }),
-  children: many(categories),
+  children: many(categories, { relationName: 'parent' }),
   bills: many(bills),
 }));
 

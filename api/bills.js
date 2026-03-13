@@ -51,7 +51,7 @@ async function getBills(req, res) {
   }
 
   // 只查询账单表，不关联其他表
-  const data = await db.select({
+  const result = await db.select({
     id: bills.id,
     type: bills.type,
     amount: bills.amount,
@@ -66,6 +66,12 @@ async function getBills(req, res) {
   .from(bills)
   .where(conditions.length > 0 ? and(...conditions) : undefined)
   .orderBy(desc(bills.billDate), desc(bills.createdAt));
+
+  // 格式化日期为 YYYY-MM-DD
+  const data = result.map(bill => ({
+    ...bill,
+    billDate: bill.billDate ? new Date(bill.billDate).toISOString().split('T')[0] : null
+  }));
 
   return res.status(200).json({ success: true, data });
 }

@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, decimal, integer, timestamp, boolean, text, foreignKey, index } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, decimal, integer, timestamp, boolean, text, date, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // ========== 分类表 ==========
@@ -50,7 +50,7 @@ export const bills = pgTable('bills', {
   categoryId: integer('category_id').references(() => categories.id),
   subCategoryId: integer('sub_category_id').references(() => categories.id),
   memberId: integer('member_id').references(() => members.id),
-  billDate: timestamp('bill_date').notNull(),
+  billDate: date('bill_date').notNull(),
   project: varchar('project', { length: 200 }),
   note: text('note'),
   createdAt: timestamp('created_at').defaultNow().notNull(),

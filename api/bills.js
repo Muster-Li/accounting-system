@@ -39,13 +39,14 @@ async function getBills(req, res) {
 
   let conditions = [];
 
-  if (startDate) {
+  // 排除 "undefined" 字符串
+  if (startDate && startDate !== 'undefined') {
     conditions.push(gte(bills.billDate, new Date(startDate)));
   }
-  if (endDate) {
+  if (endDate && endDate !== 'undefined') {
     conditions.push(lte(bills.billDate, new Date(endDate)));
   }
-  if (type) {
+  if (type && type !== 'undefined') {
     conditions.push(eq(bills.type, type));
   }
 

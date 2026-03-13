@@ -18,6 +18,10 @@ export default async function handler(req, res) {
         return await getCategories(req, res);
       case 'POST':
         return await createCategory(req, res);
+      case 'PUT':
+        return await updateCategory(req, res);
+      case 'DELETE':
+        return await deleteCategory(req, res);
       default:
         return res.status(405).json({ success: false, error: 'Method not allowed' });
     }
@@ -56,4 +60,28 @@ async function createCategory(req, res) {
   }).returning();
   
   return res.status(201).json({ success: true, data: result[0] });
+}
+
+// 更新分类
+async function updateCategory(req, res) {
+  const { id } = req.query;
+  const data = req.body;
+  
+  const result = await db.update(categories)
+    .set({
+      name: data.name,
+      icon: data.icon,
+      updatedAt: new Date(),
+    })
+    .where(eq(categories.id, parseInt(id)))
+    .returning();
+  
+  return res.status(200).json({ success: true, data: result[0] });
+}
+
+// 删除分类
+async function deleteCategory(req, res) {
+  const { id } = req.query;
+  await db.delete(categories).where(eq(categories.id, parseInt(id)));
+  return res.status(200).json({ success: true });
 }

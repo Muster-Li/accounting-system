@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { RiCloseLine, RiCheckLine, RiArrowRightSLine } from 'react-icons/ri'
+import { RiCloseLine, RiCheckLine } from 'react-icons/ri'
 import { useCategories, useMembers } from '../../hooks/useDatabase.js'
 import CategorySelector from '../common/CategorySelector.jsx'
 
 /**
  * AddRecordModal - 记一笔弹窗组件
  * 使用缓存的分类和成员数据
- * 分类采用二级联动选择器（图片样式）
+ * 分类采用二级联动下拉选择器（图片样式）
  * @param {Object} props
  * @param {boolean} props.isOpen - 是否显示
  * @param {Function} props.onClose - 关闭回调
@@ -31,19 +31,15 @@ function AddRecordModal({ isOpen, onClose, initialData, onSubmit, onUpdate, edit
     memberId: '',
     memberName: '',
     date: new Date().toISOString().split('T')[0],
-    time: new Date().toTimeString().slice(0, 5),
     project: '',
     note: '',
   })
-
-  // 显示分类选择器
-  const [showCategorySelector, setShowCategorySelector] = useState(false)
 
   // 成功提示状态
   const [showSuccess, setShowSuccess] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
 
-  // 从缓存获取分类和成员数据
+  // 从缓存获取分类和成员数据（不自动刷新，依赖全局缓存）
   const { categories, loading: categoriesLoading } = useCategories()
   const { members, loading: membersLoading } = useMembers()
 
@@ -71,7 +67,7 @@ function AddRecordModal({ isOpen, onClose, initialData, onSubmit, onUpdate, edit
         memberId: initialData.memberId?.toString() || '',
         memberName: initialData.member?.name || '',
         date: initialData.billDate || new Date().toISOString().split('T')[0],
-        time: initialData.billTime || new Date().toTimeString().slice(0, 5),
+
         project: initialData.project || '',
         note: initialData.note || '',
       })
@@ -87,14 +83,13 @@ function AddRecordModal({ isOpen, onClose, initialData, onSubmit, onUpdate, edit
         memberId: '',
         memberName: '',
         date: new Date().toISOString().split('T')[0],
-        time: new Date().toTimeString().slice(0, 5),
+
         project: '',
         note: '',
       })
     }
     // 清除成功提示
     setShowSuccess(false)
-    setShowCategorySelector(false)
   }, [initialData, isOpen])
 
   // 当标签切换时，清空分类选择（因为不同类型分类不同）
@@ -119,7 +114,6 @@ function AddRecordModal({ isOpen, onClose, initialData, onSubmit, onUpdate, edit
       categoryName: selection.categoryName,
       subCategoryName: selection.subCategoryName,
     }))
-    setShowCategorySelector(false)
   }
 
   // 处理成员选择
@@ -153,7 +147,7 @@ function AddRecordModal({ isOpen, onClose, initialData, onSubmit, onUpdate, edit
         subCategoryId: formData.subCategoryId ? parseInt(formData.subCategoryId) : null,
         memberId: parseInt(formData.memberId),
         billDate: formData.date,
-        billTime: formData.time || null,
+
         project: formData.project,
         note: formData.note,
       }
@@ -202,18 +196,6 @@ function AddRecordModal({ isOpen, onClose, initialData, onSubmit, onUpdate, edit
         </div>
       )}
 
-      {/* 分类选择器弹窗 */}
-      {showCategorySelector && (
-        <CategorySelector
-          categories={categories}
-          type={activeTab}
-          selectedCategoryId={formData.categoryId ? parseInt(formData.categoryId) : null}
-          selectedSubCategoryId={formData.subCategoryId ? parseInt(formData.subCategoryId) : null}
-          onSelect={handleCategorySelect}
-          onClose={() => setShowCategorySelector(false)}
-        />
-      )}
-
       {/* 主弹窗内容 */}
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden">
         {/* 标题栏 */}
@@ -259,32 +241,19 @@ function AddRecordModal({ isOpen, onClose, initialData, onSubmit, onUpdate, edit
             </div>
           ) : (
             <>
-              {/* 分类选择（图片样式） */}
+              {/* 分类选择（下拉框样式） */}
               <div>
                 <label className="block text-sm text-gray-700 mb-2">
                   分类 <span className="text-red-500">*</span>
                 </label>
-                <div
-                  onClick={() => setShowCategorySelector(true)}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-500 transition-colors bg-white flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-2">
-                    {formData.categoryName ? (
-                      <>
-                        <span className="text-gray-800">{formData.categoryName}</span>
-                        {formData.subCategoryName && (
-                          <>
-                            <RiArrowRightSLine className="text-gray-400" />
-                            <span className="text-gray-600">{formData.subCategoryName}</span>
-                          </>
-                        )}
-                      </>
-                    ) : (
-                      <span className="text-gray-400">请选择分类</span>
-                    )}
-                  </div>
-                  <RiArrowRightSLine className="text-gray-400" />
-                </div>
+                <CategorySelector
+                  categories={categories}
+                  type={activeTab}
+                  selectedCategoryId={formData.categoryId ? parseInt(formData.categoryId) : null}
+                  selectedSubCategoryId={formData.subCategoryId ? parseInt(formData.subCategoryId) : null}
+                  onSelect={handleCategorySelect}
+                  placeholder="请选择分类"
+                />
               </div>
 
               {/* 金额 */}
@@ -322,29 +291,18 @@ function AddRecordModal({ isOpen, onClose, initialData, onSubmit, onUpdate, edit
                 </select>
               </div>
 
-              {/* 日期和时间 */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm text-gray-700 mb-2">
-                    日期 <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-700 mb-2">时间</label>
-                  <input
-                    type="time"
-                    value={formData.time}
-                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
-                  />
-                </div>
+              {/* 日期 */}
+              <div>
+                <label className="block text-sm text-gray-700 mb-2">
+                  日期 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+                  required
+                />
               </div>
 
               {/* 项目 */}

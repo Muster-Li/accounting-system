@@ -70,11 +70,11 @@ async function seedData() {
 
     // 插入示例账单数据
     await client.query(`
-      INSERT INTO bills (type, amount, category_id, sub_category_id, member_id, bill_date, bill_time, project, note) VALUES
-      ('expense', 35.50, 1, 6, 1, CURRENT_DATE, '12:30:00', '午餐', '公司附近餐厅'),
-      ('expense', 128.00, 1, 7, 1, CURRENT_DATE - INTERVAL '1 day', '08:00:00', '早餐', '面包和咖啡'),
-      ('expense', 45.00, 3, NULL, 2, CURRENT_DATE - INTERVAL '1 day', '18:00:00', '打车', '下班回家'),
-      ('income', 15000.00, 15, NULL, 1, CURRENT_DATE - INTERVAL '5 day', '09:00:00', '月工资', '3月份工资')
+      INSERT INTO bills (type, amount, category_id, sub_category_id, member_id, bill_date, project, note) VALUES
+      ('expense', 35.50, 1, 6, 1, CURRENT_DATE, '午餐', '公司附近餐厅'),
+      ('expense', 128.00, 1, 7, 1, CURRENT_DATE - INTERVAL '1 day', '早餐', '面包和咖啡'),
+      ('expense', 45.00, 3, NULL, 2, CURRENT_DATE - INTERVAL '1 day', '打车', '下班回家'),
+      ('income', 15000.00, 15, NULL, 1, CURRENT_DATE - INTERVAL '5 day', '月工资', '3月份工资')
     `);
     console.log('✓ 示例账单数据已插入');
 

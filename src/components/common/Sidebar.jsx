@@ -4,7 +4,6 @@ import {
   RiBillLine,
   RiPieChartLine,
   RiPriceTag3Line,
-  RiSettings3Line,
   RiAddLine,
   RiArrowDownSLine,
   RiArrowRightSLine,
@@ -40,10 +39,6 @@ function Sidebar({ currentPage, onPageChange, onAddRecord }) {
   // 分类标签子菜单
   const categorySubMenus = [
     { id: 'category', label: '收支分类' },
-    { id: 'account', label: '账户管理' },
-    { id: 'member', label: '成员管理' },
-    { id: 'merchant', label: '商家管理' },
-    { id: 'project', label: '项目管理' },
   ]
 
   return (
@@ -129,18 +124,6 @@ function Sidebar({ currentPage, onPageChange, onAddRecord }) {
           )}
         </div>
 
-        {/* 设置 */}
-        <button
-          onClick={() => onPageChange('settings')}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl mt-1 transition-all duration-200 ${
-            currentPage === 'settings'
-              ? 'nav-active shadow-md'
-              : 'text-gray-600 hover:bg-gray-50'
-          }`}
-        >
-          <RiSettings3Line className="text-xl" />
-          <span className="font-medium">设置</span>
-        </button>
       </nav>
 
       {/* 底部信息 */}

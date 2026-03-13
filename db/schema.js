@@ -51,7 +51,6 @@ export const bills = pgTable('bills', {
   subCategoryId: integer('sub_category_id').references(() => categories.id),
   memberId: integer('member_id').references(() => members.id),
   billDate: timestamp('bill_date').notNull(),
-  billTime: varchar('bill_time', { length: 8 }),
   project: varchar('project', { length: 200 }),
   note: text('note'),
   createdAt: timestamp('created_at').defaultNow().notNull(),

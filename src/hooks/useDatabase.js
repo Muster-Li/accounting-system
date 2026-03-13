@@ -5,6 +5,9 @@ import {
   updateBill,
   deleteBill,
   getCategories,
+  createCategory as createCategoryApi,
+  updateCategory as updateCategoryApi,
+  deleteCategory as deleteCategoryApi,
   getMembers,
   checkConnection
 } from '../../lib/api.js';
@@ -12,6 +15,14 @@ import {
 // 缓存分类和成员数据（全局缓存，避免重复请求）
 let categoriesCache = null;
 let membersCache = null;
+
+// 订阅者列表，用于通知所有使用 useCategories 的组件更新
+const categoriesSubscribers = new Set();
+
+// 通知所有订阅者更新
+const notifyCategoriesSubscribers = () => {
+  categoriesSubscribers.forEach(callback => callback());
+};
 
 /**
  * 数据库连接 Hook
@@ -120,6 +131,8 @@ export function useBills(filters = {}, externalCategories = null, externalMember
       };
 
       const billsData = await getBills(queryFilters);
+      console.log('billsData', billsData);
+
       setAllBills(billsData);
       setHasLoaded(true);
       setError(null);
@@ -133,6 +146,7 @@ export function useBills(filters = {}, externalCategories = null, externalMember
 
   const addBill = async (data) => {
     const newBill = await createBill(data);
+    // 处理日期格式
     setAllBills((prev) => [newBill, ...prev]);
     return newBill;
   };
@@ -169,20 +183,31 @@ export function useBills(filters = {}, externalCategories = null, externalMember
   };
 }
 
+
+
 /**
- * 分类列表 Hook - 只加载一次
+ * 分类列表 Hook - 支持 CRUD 操作
+ * 使用订阅模式确保所有组件同步更新
  */
 export function useCategories(type) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
+  // 用于强制重新渲染的计数器
+  const [, forceUpdate] = useState(0);
 
-  const fetchData = useCallback(async () => {
+  const updateFromCache = useCallback(() => {
     if (categoriesCache) {
       const filtered = type
         ? categoriesCache.filter(c => c.type === type)
         : categoriesCache;
       setCategories(filtered);
+    }
+  }, [type]);
+
+  const fetchData = useCallback(async () => {
+    if (categoriesCache) {
+      updateFromCache();
       return;
     }
 
@@ -190,29 +215,88 @@ export function useCategories(type) {
     try {
       const data = await getCategories(type);
       categoriesCache = data;
-      setCategories(data);
+      updateFromCache();
       setHasLoaded(true);
     } catch (err) {
       console.error('Failed to fetch categories:', err);
     } finally {
       setLoading(false);
     }
-  }, [type]);
+  }, [type, updateFromCache]);
 
   // 只在首次加载时执行
   useEffect(() => {
     if (!hasLoaded && !categoriesCache) {
       fetchData();
     } else if (categoriesCache) {
-      const filtered = type
-        ? categoriesCache.filter(c => c.type === type)
-        : categoriesCache;
-      setCategories(filtered);
+      updateFromCache();
       setHasLoaded(true);
     }
-  }, [type, fetchData, hasLoaded]);
+  }, [type, fetchData, hasLoaded, updateFromCache]);
 
-  return { categories, loading, hasLoaded, refetch: fetchData };
+  // 订阅缓存变化
+  useEffect(() => {
+    const subscriber = () => {
+      updateFromCache();
+      forceUpdate(v => v + 1); // 强制重新渲染
+    };
+    categoriesSubscribers.add(subscriber);
+    return () => categoriesSubscribers.delete(subscriber);
+  }, [updateFromCache]);
+
+  // 创建分类
+  const createCategory = async (data) => {
+    const newCategory = await createCategoryApi(data);
+    // 更新缓存并通知所有订阅者
+    if (categoriesCache) {
+      categoriesCache = [...categoriesCache, newCategory];
+    } else {
+      categoriesCache = [newCategory];
+    }
+    notifyCategoriesSubscribers();
+    return newCategory;
+  };
+
+  // 编辑分类
+  const editCategory = async (id, data) => {
+    const updatedCategory = await updateCategoryApi(id, data);
+    // 更新缓存并通知所有订阅者
+    if (categoriesCache) {
+      categoriesCache = categoriesCache.map(c => 
+        c.id === id ? updatedCategory : c
+      );
+    }
+    notifyCategoriesSubscribers();
+    return updatedCategory;
+  };
+
+  // 删除分类
+  const removeCategory = async (id) => {
+    await deleteCategoryApi(id);
+    // 更新缓存并通知所有订阅者
+    if (categoriesCache) {
+      categoriesCache = categoriesCache.filter(c => c.id !== id);
+    }
+    notifyCategoriesSubscribers();
+  };
+
+  // 强制刷新（从数据库重新获取）
+  const refresh = useCallback(async () => {
+    categoriesCache = null;
+    await fetchData();
+    notifyCategoriesSubscribers();
+  }, [fetchData]);
+
+  return { 
+    categories, 
+    loading, 
+    hasLoaded, 
+    refetch: fetchData,
+    refresh,
+    createCategory,
+    editCategory,
+    removeCategory
+  };
 }
 
 /**

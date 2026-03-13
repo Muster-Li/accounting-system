@@ -1,4 +1,4 @@
-import { db } from '../lib/db-server.js';
+import { db } from '../lib/db.js';
 import { categories } from '../db/schema.js';
 import { eq, desc } from 'drizzle-orm';
 

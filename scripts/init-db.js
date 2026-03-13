@@ -62,7 +62,6 @@ async function initDB() {
         sub_category_id INTEGER REFERENCES categories(id),
         member_id INTEGER REFERENCES members(id),
         bill_date DATE NOT NULL,
-        bill_time TIME,
         project VARCHAR(100),
         note TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -1,4 +1,4 @@
-import { db } from '../lib/db-server.js';
+import { db } from '../lib/db.js';
 import { members } from '../db/schema.js';
 
 // Vercel Serverless Function - 成员 API

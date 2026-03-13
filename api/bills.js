@@ -1,4 +1,4 @@
-import { db } from '../lib/db-server.js';
+import { db } from '../lib/db.js';
 import { bills } from '../db/schema.js';
 import { eq, and, gte, lte, desc } from 'drizzle-orm';
 
@@ -58,7 +58,6 @@ async function getBills(req, res) {
     subCategoryId: bills.subCategoryId,
     memberId: bills.memberId,
     billDate: bills.billDate,
-    billTime: bills.billTime,
     project: bills.project,
     note: bills.note,
     createdAt: bills.createdAt,
@@ -81,12 +80,15 @@ async function createBill(req, res) {
     subCategoryId: data.subCategoryId,
     memberId: data.memberId,
     billDate: new Date(data.billDate),
-    billTime: data.billTime,
     project: data.project,
     note: data.note,
   }).returning();
 
-  return res.status(201).json({ success: true, data: result[0] });
+  // 使用输入的日期字符串返回
+  return res.status(201).json({ 
+    success: true, 
+    data: { ...result[0], billDate: data.billDate }
+  });
 }
 
 // 更新账单
@@ -102,7 +104,6 @@ async function updateBill(req, res) {
       subCategoryId: data.subCategoryId,
       memberId: data.memberId,
       billDate: new Date(data.billDate),
-      billTime: data.billTime,
       project: data.project,
       note: data.note,
       updatedAt: new Date(),
@@ -110,7 +111,11 @@ async function updateBill(req, res) {
     .where(eq(bills.id, parseInt(id)))
     .returning();
 
-  return res.status(200).json({ success: true, data: result[0] });
+  // 使用输入的日期字符串返回
+  return res.status(200).json({ 
+    success: true, 
+    data: { ...result[0], billDate: data.billDate }
+  });
 }
 
 // 删除账单

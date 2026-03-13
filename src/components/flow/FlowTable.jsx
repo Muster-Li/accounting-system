@@ -1,10 +1,6 @@
 import React from 'react'
+import * as Icons from 'react-icons/ri'
 import { formatAmount } from '../../utils/helpers'
-import { 
-  RiEditLine,
-  RiDeleteBinLine,
-  RiFileCopyLine
-} from 'react-icons/ri'
 
 /**
  * FlowTable - 流水表格组件
@@ -15,6 +11,18 @@ import {
  * @param {Function} props.onDelete - 删除回调
  */
 function FlowTable({ data, onEdit = null, onDelete }) {
+  console.log('data',data)
+
+  // 渲染图标
+  const renderIcon = (iconName) => {
+    if (!iconName) return null
+    const IconComponent = Icons[iconName]
+    if (IconComponent) {
+      return <IconComponent className="text-base" />
+    }
+    return null
+  }
+
   // 格式化日期
   const formatDate = (dateStr) => {
     try {
@@ -82,9 +90,19 @@ function FlowTable({ data, onEdit = null, onDelete }) {
                   {/* 分类（一级+二级） */}
                   <div className="col-span-2">
                     <div className="flex flex-col">
-                      <span className="text-gray-800 font-medium">{record.category}</span>
+                      <div className="flex items-center gap-1.5">
+                        {record.categoryIcon && (
+                          <span className="text-gray-500">{renderIcon(record.categoryIcon)}</span>
+                        )}
+                        <span className="text-gray-800 font-medium">{record.category}</span>
+                      </div>
                       {record.subCategory && (
-                        <span className="text-gray-400 text-xs">{record.subCategory}</span>
+                        <div className="flex items-center gap-1.5 ml-0">
+                          {record.subCategoryIcon && (
+                            <span className="text-gray-400 text-xs">{renderIcon(record.subCategoryIcon)}</span>
+                          )}
+                          <span className="text-gray-400 text-xs">{record.subCategory}</span>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -94,9 +112,9 @@ function FlowTable({ data, onEdit = null, onDelete }) {
                   </div>
                   {/* 成员 */}
                   <div className="col-span-1 text-gray-600">{record.member || '-'}</div>
-                  {/* 时间 */}
+                  {/* 日期 */}
                   <div className="col-span-2 text-gray-500">
-                    {record.date} {record.time || ''}
+                    {record.date}
                   </div>
                   {/* 项目 */}
                   <div className="col-span-2 text-gray-600 truncate" title={record.project}>
@@ -114,7 +132,7 @@ function FlowTable({ data, onEdit = null, onDelete }) {
                         className="p-1.5 text-primary-500 hover:bg-primary-50 rounded"
                         title="编辑"
                       >
-                        <RiEditLine />
+                        <Icons.RiEditLine />
                       </button>
                     )}
                     <button 
@@ -122,7 +140,7 @@ function FlowTable({ data, onEdit = null, onDelete }) {
                       className="p-1.5 text-expense hover:bg-red-50 rounded"
                       title="删除"
                     >
-                      <RiDeleteBinLine />
+                      <Icons.RiDeleteBinLine />
                     </button>
                   </div>
                 </div>

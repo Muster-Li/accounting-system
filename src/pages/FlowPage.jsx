@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import FlowHeader from '../components/flow/FlowHeader'
 import FlowTable from '../components/flow/FlowTable'
 import AddRecordModal from '../components/modals/AddRecordModal'
+import ConfirmModal from '../components/common/ConfirmModal'
 import { format } from 'date-fns'
 import { RiRefreshLine } from 'react-icons/ri'
 
@@ -36,6 +37,10 @@ function FlowPage({ billsHook, categories, members }) {
   // 编辑弹窗状态
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingRecord, setEditingRecord] = useState(null)
+
+  // 删除确认弹窗状态
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deletingRecordId, setDeletingRecordId] = useState(null)
 
   // 页面首次加载时获取账单
   useEffect(() => {
@@ -87,10 +92,11 @@ function FlowPage({ billsHook, categories, members }) {
         type: bill.type,
         amount: amount,
         category: bill.category?.name || '-',
+        categoryIcon: bill.category?.icon || '',
         subCategory: bill.subCategory?.name || '',
+        subCategoryIcon: bill.subCategory?.icon || '',
         member: bill.member?.name || '-',
         date: dateKey,
-        time: bill.billTime || '',
         project: bill.project || '',
         note: bill.note || '',
         // 保留原始数据用于编辑
@@ -113,14 +119,23 @@ function FlowPage({ billsHook, categories, members }) {
     }
   }, [stats])
 
-  // 删除账单
-  const handleDelete = async (id) => {
-    if (!confirm('确定要删除这条记录吗？')) return
+  // 删除账单 - 打开确认弹窗
+  const handleDelete = (id) => {
+    setDeletingRecordId(id)
+    setShowDeleteConfirm(true)
+  }
+
+  // 确认删除
+  const confirmDelete = async () => {
+    if (!deletingRecordId) return
 
     try {
-      await removeBill(id)
+      await removeBill(deletingRecordId)
     } catch (err) {
       alert('删除失败: ' + err.message)
+    } finally {
+      setShowDeleteConfirm(false)
+      setDeletingRecordId(null)
     }
   }
 
@@ -129,7 +144,6 @@ function FlowPage({ billsHook, categories, members }) {
     // 从 rawData 获取完整数据
     const rawData = record.rawData || record
     console.log('rawData.billDate', rawData.billDate)
-    console.log('rawData.billTime', rawData.billTime)
     console.log('record.rawData', record.rawData)
     console.log('record', record)
     // 格式化日期为 yyyy-MM-dd 字符串
@@ -151,7 +165,6 @@ function FlowPage({ billsHook, categories, members }) {
       memberId: rawData.memberId,
       member: rawData.member,
       billDate: billDateStr,
-      billTime: rawData.billTime || '',
       project: rawData.project || '',
       note: rawData.note || ''
     })
@@ -296,6 +309,20 @@ function FlowPage({ billsHook, categories, members }) {
         onSubmit={null}
         onUpdate={handleUpdate}
         editingId={editingRecord?.id || null}
+      />
+
+      {/* 删除确认弹窗 */}
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false)
+          setDeletingRecordId(null)
+        }}
+        onConfirm={confirmDelete}
+        title="删除账单"
+        message="确定要删除这条账单记录吗？此操作不可恢复。"
+        confirmText="确认删除"
+        type="danger"
       />
     </div>
   )

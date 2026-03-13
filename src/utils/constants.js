@@ -30,17 +30,8 @@ export const NAV_MENU = [
     path: 'category',
     children: [
       { id: 'category-manage', label: '收支分类', path: 'category' },
-      { id: 'account-manage', label: '账户管理', path: 'account' },
       { id: 'member-manage', label: '成员管理', path: 'member' },
-      { id: 'merchant-manage', label: '商家管理', path: 'merchant' },
-      { id: 'project-manage', label: '项目管理', path: 'project' },
     ]
-  },
-  {
-    id: 'settings',
-    label: '设置',
-    icon: 'RiSettings3Line',
-    path: 'settings'
   }
 ]
 
@@ -105,37 +96,10 @@ export const DEFAULT_CATEGORIES = {
   ]
 }
 
-// 账户列表
-export const ACCOUNTS = [
-  { id: 'alipay', name: '支付宝' },
-  { id: 'wechat', name: '微信' },
-  { id: 'cash', name: '现金' },
-  { id: 'card', name: '银行卡' },
-]
-
 // 成员列表
 export const MEMBERS = [
   { id: 'all', name: '所有' },
   { id: 'steve', name: 'Steve' },
   { id: 'qingxia', name: '青霞' },
   { id: 'ruihan', name: '瑞韩' },
-]
-
-// 项目列表
-export const PROJECTS = [
-  { id: 'travel', name: '旅行' },
-  { id: 'dining', name: '拼好饭' },
-  { id: 'movie', name: '看电影' },
-  { id: 'bbq', name: '烤肉' },
-  { id: 'post', name: '邮政' },
-  { id: 'book', name: '委托书店' },
-  { id: 'supermarket', name: '小象超市' },
-]
-
-// 商家列表
-export const MERCHANTS = [
-  { id: 'meituan', name: '美团' },
-  { id: 'pdd', name: '拼多多' },
-  { id: 'taobao', name: '淘宝' },
-  { id: 'jd', name: '京东' },
 ]

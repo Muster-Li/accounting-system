@@ -10,7 +10,6 @@ import {
   Legend,
 } from 'chart.js'
 import { Line } from 'react-chartjs-2'
-import { generateDailyChartData } from '../../utils/helpers'
 
 // 注册 Chart.js 组件
 ChartJS.register(
@@ -24,26 +23,24 @@ ChartJS.register(
 )
 
 /**
- * DailyChart - 每日收支折线图组件
+ * DailyChart - 每日支出折线图组件
+ * @param {Object} monthlyTrend - 月度趋势数据 { day: [], expense: [] }
  */
-function DailyChart() {
-  const { days, incomeData, expenseData } = generateDailyChartData()
+function DailyChart({ monthlyTrend }) {
+  // 默认空数据
+  const defaultData = {
+    day: [],
+    expense: []
+  }
+
+  const data = monthlyTrend || defaultData
+  const days = data.day || []
+  const expenseData = data.expense || []
 
   // 图表数据配置
-  const data = {
+  const chartData = {
     labels: days,
     datasets: [
-      {
-        label: '收入',
-        data: incomeData,
-        borderColor: '#22c55e',
-        backgroundColor: 'rgba(34, 197, 94, 0.1)',
-        borderWidth: 2,
-        pointRadius: 0,
-        pointHoverRadius: 4,
-        tension: 0.4,
-        fill: false,
-      },
       {
         label: '支出',
         data: expenseData,
@@ -53,7 +50,7 @@ function DailyChart() {
         pointRadius: 0,
         pointHoverRadius: 4,
         tension: 0.4,
-        fill: false,
+        fill: true,
       },
     ],
   }
@@ -68,17 +65,7 @@ function DailyChart() {
     },
     plugins: {
       legend: {
-        display: true,
-        position: 'top',
-        align: 'end',
-        labels: {
-          usePointStyle: true,
-          pointStyle: 'circle',
-          padding: 20,
-          font: {
-            size: 12,
-          },
-        },
+        display: false, // 只有一个数据集，隐藏图例
       },
       tooltip: {
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -92,10 +79,7 @@ function DailyChart() {
         },
         callbacks: {
           label: function(context) {
-            let label = context.dataset.label || ''
-            if (label) {
-              label += ': '
-            }
+            let label = '支出: '
             if (context.parsed.y !== null) {
               label += '¥' + context.parsed.y.toFixed(2)
             }
@@ -137,11 +121,25 @@ function DailyChart() {
     },
   }
 
+  // 计算总支出
+  const totalExpense = expenseData.reduce((sum, val) => sum + (val || 0), 0)
+
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">本月每日收支</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-800">本月每日支出</h3>
+        <span className="text-sm text-gray-500">
+          总支出 <span className="font-medium text-expense">¥{totalExpense.toFixed(2)}</span>
+        </span>
+      </div>
       <div className="chart-container">
-        <Line data={data} options={options} height={300} />
+        {days.length > 0 ? (
+          <Line data={chartData} options={options} height={300} />
+        ) : (
+          <div className="h-[300px] flex items-center justify-center text-gray-400">
+            暂无数据
+          </div>
+        )}
       </div>
     </div>
   )

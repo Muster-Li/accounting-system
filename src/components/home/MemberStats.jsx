@@ -3,27 +3,24 @@ import { formatAmount } from '../../utils/helpers'
 
 /**
  * MemberStats - 成员收支统计组件
+ * @param {Array} memberStats - 成员统计数据 [{ id, name, income, expense }]
  */
-function MemberStats() {
-  // 成员数据（与截图一致）
-  const members = [
-    { 
-      id: 'qingxia', 
-      name: '青霞', 
-      income: 0, 
-      expense: 1634.77,
-      role: '成员',
-      avatarColor: 'bg-pink-400'
-    },
-    { 
-      id: 'ruihan', 
-      name: '瑞韩', 
-      income: 0, 
-      expense: 8734.13,
-      role: '成员',
-      avatarColor: 'bg-blue-400'
-    },
-  ]
+function MemberStats({ memberStats }) {
+  // 处理数据
+  const members = (memberStats || []).map(member => ({
+    ...member,
+    income: member.income || 0,
+    expense: member.expense || 0,
+    avatarColor: getAvatarColor(member.id)
+  }))
+
+  // 根据 ID 获取头像颜色
+  function getAvatarColor(id) {
+    const colors = ['bg-pink-400', 'bg-blue-400', 'bg-green-400', 'bg-yellow-400', 'bg-purple-400', 'bg-indigo-400']
+    if (!id) return colors[0]
+    const index = (parseInt(id) || 0) % colors.length
+    return colors[index]
+  }
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -32,36 +29,41 @@ function MemberStats() {
 
       {/* 成员列表 */}
       <div className="space-y-4">
-        {members.map(member => (
-          <div 
-            key={member.id}
-            className="flex items-center justify-between"
-          >
-            {/* 左侧：头像+信息 */}
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 ${member.avatarColor} rounded-full flex items-center justify-center text-white font-medium`}>
-                {member.name[0]}
+        {members.length > 0 ? (
+          members.map(member => (
+            <div 
+              key={member.id}
+              className="flex items-center justify-between"
+            >
+              {/* 左侧：头像+信息 */}
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 ${member.avatarColor} rounded-full flex items-center justify-center text-white font-medium`}>
+                  {member.name ? member.name[0] : '?'}
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">{member.name || '未命名'}</p>
+                  <p className="text-xs text-gray-400">成员</p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-gray-800">{member.name}</p>
-                <p className="text-xs text-gray-400">{member.role}</p>
-              </div>
-            </div>
 
-            {/* 右侧：收支金额 */}
+            {/* 右侧：收支金额 - 支出在上面 */}
             <div className="text-right text-sm">
               <p className="text-gray-500">
-                总收入 <span className="text-income font-medium">{formatAmount(member.income)}</span>
+                支出 <span className="text-expense font-medium">-{formatAmount(member.expense)}</span>
               </p>
               <p className="text-gray-500">
-                总支出 <span className="text-expense font-medium">{formatAmount(member.expense)}</span>
+                收入 <span className="text-income font-medium">{member.income > 0 ? '+' : ''}{formatAmount(member.income)}</span>
               </p>
             </div>
-          </div>
-        ))}
+            </div>
+          ))
+        ) : (
+          <div className="text-center text-gray-400 py-8">暂无成员数据</div>
+        )}
       </div>
     </div>
   )
 }
 
 export default MemberStats
+

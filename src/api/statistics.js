@@ -1,11 +1,44 @@
 // 统计相关 API
 import { db, sql } from '../../lib/db';
 
+// API 基础 URL
+const API_BASE_URL = '';
+
+// 检查是否在浏览器生产环境（没有直接数据库连接）
+const isBrowserProduction = typeof window !== 'undefined' && !db && !sql;
+
+/**
+ * 浏览器环境调用 HTTP API
+ */
+async function fetchAPI(endpoint, options = {}) {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || `API request failed: ${response.status}`);
+  }
+  
+  const result = await response.json();
+  return result.data || result;
+}
+
 /**
  * 获取首页统计数据
  */
 export async function getHomeStatistics() {
   try {
+    // 浏览器生产环境：调用 HTTP API
+    if (isBrowserProduction) {
+      return await fetchAPI('/api/statistics?stat_scope=home&stat_type=current&year=0');
+    }
+    
+    // 本地开发环境：直接查询数据库
     const query = `
       SELECT stats_data, calculated_at 
       FROM statistics 
@@ -18,11 +51,9 @@ export async function getHomeStatistics() {
     
     let result;
     if (sql) {
-      // 浏览器环境 - Neon HTTP
       result = await sql(query);
       result = { rows: result };
     } else if (db) {
-      // 服务端环境 - Vercel Postgres
       result = await db.execute(query);
     } else {
       throw new Error('Database not initialized');
@@ -47,6 +78,15 @@ export async function getHomeStatistics() {
  */
 export async function calculateHomeStatistics() {
   try {
+    // 浏览器生产环境：调用 HTTP API
+    if (isBrowserProduction) {
+      return await fetchAPI('/api/statistics-calc', {
+        method: 'POST',
+        body: JSON.stringify({ type: 'home' }),
+      });
+    }
+    
+    // 本地开发环境：直接调用存储过程
     const query = 'CALL calc_home_stats()';
     
     if (sql) {

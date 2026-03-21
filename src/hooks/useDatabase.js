@@ -119,15 +119,16 @@ export function useBills(filters = {}, externalCategories = null, externalMember
   }, [filteredBills]);
 
   // 手动获取账单数据（不自动执行）
-  const fetchBills = useCallback(async (force = false) => {
+  const fetchBills = useCallback(async (force = false, dateParams = null) => {
     // 如果已经加载过且不是强制刷新，跳过
     if (hasLoaded && !force) return;
 
     setLoading(true);
     try {
+      // 优先使用传入的日期参数，其次使用 filters 中的日期
       const queryFilters = {
-        startDate: filters.startDate,
-        endDate: filters.endDate,
+        startDate: dateParams?.startDate ?? filters.startDate,
+        endDate: dateParams?.endDate ?? filters.endDate,
       };
 
       const billsData = await getBills(queryFilters);

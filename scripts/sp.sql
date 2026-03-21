@@ -5,10 +5,11 @@ AS $$
 DECLARE
   v_stat_scope VARCHAR(20) := 'home';
   v_stat_type VARCHAR(20) := 'current';
-  v_year INT := 0;          
-  v_month INT := NULL;      
+  v_year INT := 0;
+  v_month INT := NULL;
   v_current_date DATE := CURRENT_DATE;
   v_month_start DATE := DATE_TRUNC('month', v_current_date)::DATE;
+  v_month_end DATE := (DATE_TRUNC('month', v_current_date) + INTERVAL '1 month - 1 day')::DATE;
   v_year_start DATE := DATE_TRUNC('year', v_current_date)::DATE;
   v_month_days INT := EXTRACT(DAY FROM (v_month_start + INTERVAL '1 month - 1 day'))::INT;
 BEGIN
@@ -32,8 +33,8 @@ BEGIN
     SELECT
       COALESCE(SUM(CASE WHEN type = 'income' AND bill_date = v_current_date THEN amount ELSE 0 END), 0) AS today_income,
       COALESCE(SUM(CASE WHEN type = 'expense' AND bill_date = v_current_date THEN amount ELSE 0 END), 0) AS today_expense,
-      COALESCE(SUM(CASE WHEN type = 'income' AND bill_date >= v_month_start THEN amount ELSE 0 END), 0) AS month_income,
-      COALESCE(SUM(CASE WHEN type = 'expense' AND bill_date >= v_month_start THEN amount ELSE 0 END), 0) AS month_expense,
+      COALESCE(SUM(CASE WHEN type = 'income' AND bill_date >= v_month_start AND bill_date <= v_month_end THEN amount ELSE 0 END), 0) AS month_income,
+      COALESCE(SUM(CASE WHEN type = 'expense' AND bill_date >= v_month_start AND bill_date <= v_month_end THEN amount ELSE 0 END), 0) AS month_expense,
       COALESCE(SUM(CASE WHEN type = 'income' AND bill_date >= v_year_start THEN amount ELSE 0 END), 0) AS year_income,
       COALESCE(SUM(CASE WHEN type = 'expense' AND bill_date >= v_year_start THEN amount ELSE 0 END), 0) AS year_expense
     FROM bills
@@ -42,12 +43,12 @@ BEGIN
   member_stats AS (
     SELECT COALESCE(json_agg(row_to_json(m)), '[]'::json) AS data
     FROM (
-      SELECT 
+      SELECT
         m.id, m.name,
         COALESCE(SUM(CASE WHEN b.type = 'income' THEN b.amount ELSE 0 END), 0) AS income,
         COALESCE(SUM(CASE WHEN b.type = 'expense' THEN b.amount ELSE 0 END), 0) AS expense
       FROM members m
-      LEFT JOIN bills b ON m.id = b.member_id AND b.bill_date >= v_month_start
+      LEFT JOIN bills b ON m.id = b.member_id AND b.bill_date >= v_month_start AND b.bill_date <= v_month_end
       WHERE m.is_active = true
       GROUP BY m.id, m.name
     ) m
@@ -56,14 +57,14 @@ BEGIN
   category_expense AS (
     SELECT COALESCE(json_agg(row_to_json(c)), '[]'::json) AS data
     FROM (
-      SELECT 
+      SELECT
         c.id, c.name, c.icon, c.color,
         COALESCE(SUM(b.amount), 0) AS amount
       FROM categories c
       JOIN bills b ON c.id = b.category_id
-      WHERE c.type = 'expense' 
-        AND b.type = 'expense' 
-        AND b.bill_date >= v_month_start
+      WHERE c.type = 'expense'
+        AND b.type = 'expense'
+        AND b.bill_date >= v_month_start AND b.bill_date <= v_month_end
       GROUP BY c.id, c.name, c.icon, c.color
       ORDER BY amount DESC
     ) c
@@ -72,26 +73,27 @@ BEGIN
   category_income AS (
     SELECT COALESCE(json_agg(row_to_json(c)), '[]'::json) AS data
     FROM (
-      SELECT 
+      SELECT
         c.id, c.name, c.icon, c.color,
         COALESCE(SUM(b.amount), 0) AS amount
       FROM categories c
       JOIN bills b ON c.id = b.category_id
-      WHERE c.type = 'income' 
-        AND b.type = 'income' 
-        AND b.bill_date >= v_month_start
+      WHERE c.type = 'income'
+        AND b.type = 'income'
+        AND b.bill_date >= v_month_start AND b.bill_date <= v_month_end
       GROUP BY c.id, c.name, c.icon, c.color
       ORDER BY amount DESC
     ) c
   ),
   -- 5. 月度支出折线图
   monthly_trend AS (
-    SELECT 
+    SELECT
       ARRAY(SELECT generate_series(1, v_month_days)) AS day_arr,
       ARRAY(
         SELECT COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0)
         FROM generate_series(1, v_month_days) AS day_num
         LEFT JOIN bills ON bill_date = v_month_start + (day_num - 1) * INTERVAL '1 day'
+          AND bill_date <= v_month_end
         GROUP BY day_num
         ORDER BY day_num
       ) AS expense_arr

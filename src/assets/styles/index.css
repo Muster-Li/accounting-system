@@ -124,3 +124,78 @@ input:focus, select:focus, textarea:focus {
   height: 300px;
   width: 100%;
 }
+
+/* react-datepicker 自定义样式 */
+.react-datepicker {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.react-datepicker__header {
+  background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  padding-top: 12px;
+}
+
+.react-datepicker__current-month {
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.react-datepicker__day-name {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+.react-datepicker__navigation {
+  top: 12px;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: white;
+}
+
+.react-datepicker__day {
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.react-datepicker__day:hover {
+  background-color: #fff7ed;
+  color: #f97316;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--in-selecting-range,
+.react-datepicker__day--in-range {
+  background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+  color: white;
+}
+
+.react-datepicker__day--selected:hover,
+.react-datepicker__day--in-selecting-range:hover,
+.react-datepicker__day--in-range:hover {
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+}
+
+.react-datepicker__day--keyboard-selected {
+  background-color: #fff7ed;
+  color: #f97316;
+}
+
+.react-datepicker__day--today {
+  font-weight: 600;
+  color: #f97316;
+}
+
+.react-datepicker__day--disabled {
+  color: #d1d5db;
+}
+
+.react-datepicker-popper {
+  z-index: 100;
+}

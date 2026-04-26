@@ -104,3 +104,84 @@ export async function calculateHomeStatistics() {
     throw error;
   }
 }
+
+/**
+ * 获取月度分类统计数据
+ * @param {number} year - 年份
+ * @param {number} month - 月份
+ */
+export async function getMonthlyCategoryStats(year, month) {
+  try {
+    // 浏览器生产环境：调用 HTTP API
+    if (isBrowserProduction) {
+      return await fetchAPI(`/api/statistics?stat_scope=report&stat_type=monthly&year=${year}&month=${month}`);
+    }
+    
+    // 本地开发环境：直接查询数据库
+    const query = `
+      SELECT stats_data, calculated_at 
+      FROM statistics 
+      WHERE stat_scope = 'report' 
+      AND stat_type = 'monthly' 
+      AND year = $1 
+      AND month = $2 
+      LIMIT 1
+    `;
+    
+    let result;
+    if (sql) {
+      result = await sql(query, [year, month]);
+      result = { rows: result };
+    } else if (db) {
+      result = await db.execute(query, [year, month]);
+    } else {
+      throw new Error('Database not initialized');
+    }
+    
+    if (result.rows.length === 0) {
+      return null;
+    }
+    
+    return {
+      statsData: result.rows[0].stats_data,
+      calculatedAt: result.rows[0].calculated_at,
+    };
+  } catch (error) {
+    console.error('Failed to get monthly category stats:', error);
+    throw error;
+  }
+}
+
+/**
+ * 调用存储过程计算月度分类统计
+ * @param {number} year - 年份
+ * @param {number} month - 月份
+ */
+export async function calculateMonthlyCategoryStats(year, month) {
+  try {
+    // 浏览器生产环境：调用 HTTP API
+    if (isBrowserProduction) {
+      return await fetchAPI('/api/statistics-calc', {
+        method: 'POST',
+        body: JSON.stringify({ type: 'monthly', year, month }),
+      });
+    }
+    
+    // 本地开发环境：直接调用存储过程
+    const query = 'CALL calc_monthly_category_stats($1, $2)';
+    
+    if (sql) {
+      await sql(query, [year, month]);
+    } else if (db) {
+      await db.execute(query, [year, month]);
+    } else {
+      throw new Error('Database not initialized');
+    }
+    
+    // 重新查询统计数据
+    return await getMonthlyCategoryStats(year, month);
+  } catch (error) {
+    console.error('Failed to calculate monthly category stats:', error);
+    throw error;
+  }
+}

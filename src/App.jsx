@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import Sidebar from './components/common/Sidebar'
 import HomePage from './pages/HomePage'
 import FlowPage from './pages/FlowPage'
 import CategoryPage from './pages/CategoryPage'
+import ReportPage from './pages/ReportPage'
 import AddRecordModal from './components/modals/AddRecordModal'
 import { usePreload, useBills } from './hooks/useDatabase.js'
 
@@ -47,6 +48,8 @@ function App() {
             members={members}
           />
         )
+      case 'report':
+        return <ReportPage />
       case 'category':
         return <CategoryPage />
       default:

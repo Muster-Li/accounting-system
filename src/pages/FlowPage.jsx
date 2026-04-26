@@ -215,9 +215,12 @@ function FlowPage({ billsHook, categories, members }) {
     }
   }
 
-  // 处理刷新
+  // 处理刷新 - 带上当前日期范围
   const handleRefresh = () => {
-    refresh()
+    fetchBills(true, {
+      startDate: format(filters.startDate, 'yyyy-MM-dd'),
+      endDate: format(filters.endDate, 'yyyy-MM-dd')
+    })
   }
 
   // 处理日期变更

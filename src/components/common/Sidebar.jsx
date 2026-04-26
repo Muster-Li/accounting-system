@@ -36,6 +36,12 @@ function Sidebar({ currentPage, onPageChange, onAddRecord }) {
     { id: 'report', label: '报表', icon: RiPieChartLine },
   ]
 
+  // 处理菜单点击
+  const handleMenuClick = (menuId) => {
+    console.log('Menu clicked:', menuId)
+    onPageChange(menuId)
+  }
+
   // 分类标签子菜单
   const categorySubMenus = [
     { id: 'category', label: '收支分类' },
@@ -71,7 +77,7 @@ function Sidebar({ currentPage, onPageChange, onAddRecord }) {
         {menuItems.map(item => (
           <button
             key={item.id}
-            onClick={() => onPageChange(item.id)}
+            onClick={() => handleMenuClick(item.id)}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-200 ${
               currentPage === item.id
                 ? 'nav-active shadow-md'

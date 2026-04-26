@@ -19,7 +19,7 @@ export default async function handler(req, res) {
   });
 
   try {
-    const { type } = req.body;
+    const { type, year, month } = req.body;
 
     if (type === 'home') {
       // 调用存储过程计算首页统计
@@ -34,6 +34,40 @@ export default async function handler(req, res) {
          AND year = 0 
          AND month IS NULL 
          LIMIT 1`
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(200).json({ success: true, data: null });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          statsData: result.rows[0].stats_data,
+          calculatedAt: result.rows[0].calculated_at,
+        },
+      });
+    }
+
+    if (type === 'monthly') {
+      // 验证参数
+      if (!year || !month) {
+        return res.status(400).json({ success: false, error: 'Missing year or month parameter' });
+      }
+
+      // 调用存储过程计算月度分类统计
+      await pool.query('CALL calc_monthly_category_stats($1, $2)', [year, month]);
+
+      // 查询计算后的结果
+      const result = await pool.query(
+        `SELECT stats_data, calculated_at 
+         FROM statistics 
+         WHERE stat_scope = 'report' 
+         AND stat_type = 'monthly' 
+         AND year = $1 
+         AND month = $2 
+         LIMIT 1`,
+        [year, month]
       );
 
       if (result.rows.length === 0) {

@@ -19,6 +19,9 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
   // 统一日期（默认为今天）
   const [billDate, setBillDate] = useState(new Date().toISOString().split('T')[0])
 
+  // 统一成员（一次记录一个成员的多个账单）
+  const [globalMemberId, setGlobalMemberId] = useState('')
+
   // 账单列表
   const [records, setRecords] = useState([createEmptyRecord()])
 
@@ -31,6 +34,7 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
     if (isOpen) {
       setActiveTab('expense')
       setBillDate(new Date().toISOString().split('T')[0])
+      setGlobalMemberId('')
       setRecords([createEmptyRecord()])
       setShowSuccess(false)
       setSaving(false)
@@ -124,9 +128,6 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
     if (!record.categoryId) {
       return `第 ${index + 1} 行：请选择分类`
     }
-    if (!record.memberId) {
-      return `第 ${index + 1} 行：请选择成员`
-    }
     if (!record.amount || parseFloat(record.amount) <= 0) {
       return `第 ${index + 1} 行：请输入有效金额`
     }
@@ -135,7 +136,13 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
 
   // 保存所有记录
   const handleSave = async () => {
-    // 验证
+    // 验证成员
+    if (!globalMemberId) {
+      alert('请选择成员')
+      return
+    }
+
+    // 验证每条记录
     for (let i = 0; i < records.length; i++) {
       const error = validateRecord(records[i], i)
       if (error) {
@@ -145,7 +152,7 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
     }
 
     // 检查是否有数据
-    const validRecords = records.filter(r => r.amount && r.categoryId && r.memberId)
+    const validRecords = records.filter(r => r.amount && r.categoryId)
     if (validRecords.length === 0) {
       alert('请至少填写一条完整的账单记录')
       return
@@ -158,7 +165,7 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
         amount: parseFloat(r.amount),
         categoryId: parseInt(r.categoryId),
         subCategoryId: r.subCategoryId ? parseInt(r.subCategoryId) : null,
-        memberId: parseInt(r.memberId),
+        memberId: parseInt(globalMemberId),
         billDate: billDate,
         project: r.project,
         note: r.note,
@@ -239,24 +246,38 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
           ))}
         </div>
 
-        {/* 日期选择 */}
-        <div className="px-6 py-3 border-b border-gray-100 shrink-0 flex items-center gap-3">
-          <span className="text-sm text-gray-600">记账日期</span>
-          <input
-            type="date"
-            value={billDate}
-            onChange={(e) => setBillDate(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500"
-          />
+        {/* 日期和成员选择 */}
+        <div className="px-6 py-3 border-b border-gray-100 shrink-0 flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">记账日期</span>
+            <input
+              type="date"
+              value={billDate}
+              onChange={(e) => setBillDate(e.target.value)}
+              className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">成员</span>
+            <select
+              value={globalMemberId}
+              onChange={(e) => setGlobalMemberId(e.target.value)}
+              className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 bg-white min-w-[120px]"
+            >
+              <option value="">选择成员</option>
+              {activeMembers.map(member => (
+                <option key={member.id} value={member.id}>{member.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* 表单内容 */}
         <div className="flex-1 overflow-y-auto p-4">
           {/* 表头 */}
           <div className="grid grid-cols-12 gap-3 mb-2 text-xs text-gray-500 font-medium px-1">
-            <div className="col-span-4">分类</div>
-            <div className="col-span-2">成员</div>
-            <div className="col-span-2">金额</div>
+            <div className="col-span-5">分类</div>
+            <div className="col-span-3">金额</div>
             <div className="col-span-3">项目/备注</div>
             <div className="col-span-1"></div>
           </div>
@@ -269,7 +290,7 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
                 className="grid grid-cols-12 gap-3 items-center bg-gray-50 rounded-lg p-2"
               >
                 {/* 分类选择 */}
-                <div className="col-span-4">
+                <div className="col-span-5">
                   <CategorySelector
                     categories={categories}
                     type={activeTab}
@@ -280,22 +301,8 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
                   />
                 </div>
 
-                {/* 成员选择 */}
-                <div className="col-span-2">
-                  <select
-                    value={record.memberId}
-                    onChange={(e) => updateRecord(index, 'memberId', e.target.value)}
-                    className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 bg-white"
-                  >
-                    <option value="">成员</option>
-                    {activeMembers.map(member => (
-                      <option key={member.id} value={member.id}>{member.name}</option>
-                    ))}
-                  </select>
-                </div>
-
                 {/* 金额 */}
-                <div className="col-span-2">
+                <div className="col-span-3">
                   <input
                     type="number"
                     step="0.01"

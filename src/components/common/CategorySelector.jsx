@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import * as Icons from 'react-icons/ri';
 
 /**
@@ -22,6 +23,7 @@ function CategorySelector({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
+  const dropdownId = useRef(`category-dropdown-${Math.random().toString(36).substr(2, 9)}`);
 
   // 过滤出当前类型的分类
   const typeCategories = useMemo(() => {
@@ -96,7 +98,10 @@ function CategorySelector({
   // 点击外部关闭下拉框
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
+      // 检查是否点击在容器内或 Portal 下拉面板内
+      const clickedInContainer = containerRef.current && containerRef.current.contains(event.target);
+      const clickedInDropdown = document.getElementById(dropdownId.current)?.contains(event.target);
+      if (!clickedInContainer && !clickedInDropdown) {
         setIsOpen(false);
       }
     };
@@ -133,9 +138,18 @@ function CategorySelector({
         <Icons.RiArrowDownSLine className={`text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </div>
 
-      {/* 下拉面板 */}
-      {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
+      {/* 下拉面板 - 使用 Portal 渲染到 body，避免被父容器裁剪 */}
+      {isOpen && createPortal(
+        <div
+          id={dropdownId.current}
+          className="fixed bg-white rounded-lg shadow-lg border border-gray-200 z-[9999] overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            top: containerRef.current ? containerRef.current.getBoundingClientRect().bottom + 4 + 'px' : 0,
+            left: containerRef.current ? containerRef.current.getBoundingClientRect().left + 'px' : 0,
+            width: containerRef.current ? containerRef.current.offsetWidth + 'px' : '100%',
+          }}
+        >
           <div className="flex h-72">
             {/* 左侧：一级分类 */}
             <div className="w-2/5 border-r border-gray-100 overflow-y-auto bg-gray-50/50">
@@ -202,7 +216,8 @@ function CategorySelector({
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -38,6 +38,7 @@ function AddRecordModal({ isOpen, onClose, initialData, onSubmit, onUpdate, edit
   // 成功提示状态
   const [showSuccess, setShowSuccess] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [saving, setSaving] = useState(false)
 
   // 从缓存获取分类和成员数据（不自动刷新，依赖全局缓存）
   const { categories, loading: categoriesLoading } = useCategories()
@@ -139,6 +140,8 @@ function AddRecordModal({ isOpen, onClose, initialData, onSubmit, onUpdate, edit
       return
     }
 
+    setSaving(true)
+
     try {
       const submitData = {
         type: activeTab,
@@ -174,6 +177,8 @@ function AddRecordModal({ isOpen, onClose, initialData, onSubmit, onUpdate, edit
     } catch (error) {
       console.error('Submit error:', error)
       alert('保存失败: ' + (error.message || '未知错误'))
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -339,14 +344,23 @@ function AddRecordModal({ isOpen, onClose, initialData, onSubmit, onUpdate, edit
               <div className="pt-4">
                 <button
                   type="submit"
-                  disabled={showSuccess}
-                  className={`w-full py-3 text-sm font-medium text-white rounded-lg transition-colors ${
-                    showSuccess
-                      ? 'bg-green-500 cursor-not-allowed'
+                  disabled={saving || showSuccess}
+                  className={`w-full py-3 text-sm font-medium text-white rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                    saving || showSuccess
+                      ? 'bg-gray-400 cursor-not-allowed'
                       : 'bg-blue-500 hover:bg-blue-600'
                   }`}
                 >
-                  {showSuccess ? '保存成功' : (isEditing ? '保存修改' : '保存')}
+                  {saving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>保存中...</span>
+                    </>
+                  ) : showSuccess ? (
+                    '保存成功'
+                  ) : (
+                    (isEditing ? '保存修改' : '保存')
+                  )}
                 </button>
               </div>
             </>

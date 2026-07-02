@@ -165,6 +165,12 @@ export function useBills(filters = {}, externalCategories = null, externalMember
     setAllBills((prev) => prev.filter((bill) => bill.id !== id));
   };
 
+  // 批量添加账单
+  const addBillsBatch = async (newBills) => {
+    setAllBills((prev) => [...newBills, ...prev]);
+    return newBills;
+  };
+
   // 强制刷新
   const refresh = useCallback(async () => {
     await fetchBills(true);
@@ -179,6 +185,7 @@ export function useBills(filters = {}, externalCategories = null, externalMember
     fetchBills,
     refresh,
     addBill,
+    addBillsBatch,
     editBill,
     removeBill
   };

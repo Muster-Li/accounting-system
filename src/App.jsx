@@ -5,6 +5,7 @@ import FlowPage from './pages/FlowPage'
 import CategoryPage from './pages/CategoryPage'
 import ReportPage from './pages/ReportPage'
 import AddRecordModal from './components/modals/AddRecordModal'
+import MultiAddRecordModal from './components/modals/MultiAddRecordModal'
 import { usePreload, useBills } from './hooks/useDatabase.js'
 
 /**
@@ -17,6 +18,8 @@ function App() {
   const [currentPage, setCurrentPage] = useState('home')
   // 记一笔弹窗显示状态
   const [showAddModal, setShowAddModal] = useState(false)
+  // 记多笔弹窗显示状态
+  const [showMultiAddModal, setShowMultiAddModal] = useState(false)
 
   // 预加载分类和成员（全局只加载一次）
   const { isReady, categories, members } = usePreload()
@@ -76,6 +79,7 @@ function App() {
         currentPage={currentPage}
         onPageChange={setCurrentPage}
         onAddRecord={() => setShowAddModal(true)}
+        onAddMultiRecord={() => setShowMultiAddModal(true)}
       />
 
       {/* 主内容区 */}
@@ -88,6 +92,16 @@ function App() {
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSubmit={handleCreate}
+      />
+
+      {/* 记多笔弹窗 */}
+      <MultiAddRecordModal
+        isOpen={showMultiAddModal}
+        onClose={() => setShowMultiAddModal(false)}
+        onSuccess={(bills) => {
+          // 批量添加到状态（一次数据库批量插入，一次状态更新）
+          billsHook.addBillsBatch(bills)
+        }}
       />
     </div>
   )

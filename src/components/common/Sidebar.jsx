@@ -15,8 +15,9 @@ import {
  * @param {string} props.currentPage - 当前选中页面
  * @param {Function} props.onPageChange - 页面切换回调
  * @param {Function} props.onAddRecord - 记一笔按钮回调
+ * @param {Function} props.onAddMultiRecord - 记多笔按钮回调
  */
-function Sidebar({ currentPage, onPageChange, onAddRecord }) {
+function Sidebar({ currentPage, onPageChange, onAddRecord, onAddMultiRecord }) {
   // 分类标签子菜单展开状态
   const [expandedMenus, setExpandedMenus] = useState(['category'])
 
@@ -61,13 +62,20 @@ function Sidebar({ currentPage, onPageChange, onAddRecord }) {
       </div>
 
       {/* 记一笔按钮 */}
-      <div className="p-4">
+      <div className="p-4 space-y-2">
         <button
           onClick={onAddRecord}
           className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-primary-400 to-primary-500 hover:from-primary-500 hover:to-primary-600 text-white py-3 px-4 rounded-xl btn-hover shadow-lg shadow-primary-200"
         >
           <RiAddLine className="text-xl" />
           <span className="font-medium">记一笔</span>
+        </button>
+        <button
+          onClick={onAddMultiRecord}
+          className="w-full flex items-center justify-center gap-2 bg-white border border-primary-300 text-primary-600 hover:bg-primary-50 py-2.5 px-4 rounded-xl transition-colors"
+        >
+          <RiAddLine className="text-lg" />
+          <span className="font-medium text-sm">记多笔</span>
         </button>
       </div>
 

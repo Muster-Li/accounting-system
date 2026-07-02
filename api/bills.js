@@ -73,6 +73,10 @@ export default async function handler(req, res) {
       case 'GET':
         return await getBills(req, res);
       case 'POST':
+        // 批量创建
+        if (req.body.bills && Array.isArray(req.body.bills)) {
+          return await createBillsBatch(req, res);
+        }
         return await createBill(req, res);
       case 'PUT':
         return await updateBill(req, res);
@@ -203,4 +207,43 @@ async function deleteBill(req, res) {
   const { id } = req.query;
   await db.delete(bills).where(eq(bills.id, parseInt(id)));
   return res.status(200).json({ success: true });
+}
+
+// 批量创建账单
+async function createBillsBatch(req, res) {
+  const { bills: billsList } = req.body;
+
+  if (!billsList || !Array.isArray(billsList) || billsList.length === 0) {
+    return res.status(400).json({ success: false, error: 'Invalid bills data' });
+  }
+
+  try {
+    const values = billsList.map(data => ({
+      type: data.type,
+      amount: data.amount.toString(),
+      categoryId: data.categoryId,
+      subCategoryId: data.subCategoryId,
+      memberId: data.memberId,
+      billDate: new Date(data.billDate),
+      project: data.project,
+      note: data.note,
+    }));
+
+    const result = await db.insert(bills).values(values).returning();
+
+    // 使用输入的日期字符串返回
+    const data = result.map((item, index) => ({
+      ...item,
+      billDate: billsList[index]?.billDate || item.billDate
+    }));
+
+    return res.status(201).json({
+      success: true,
+      data,
+      count: result.length
+    });
+  } catch (error) {
+    console.error('Batch insert error:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
 }

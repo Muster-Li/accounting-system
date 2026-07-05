@@ -144,11 +144,17 @@ function CategorySelector({
           id={dropdownId.current}
           className="fixed bg-white rounded-lg shadow-lg border border-gray-200 z-[9999] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
-          style={{
-            top: containerRef.current ? containerRef.current.getBoundingClientRect().bottom + 4 + 'px' : 0,
-            left: containerRef.current ? containerRef.current.getBoundingClientRect().left + 'px' : 0,
-            width: containerRef.current ? containerRef.current.offsetWidth + 'px' : '100%',
-          }}
+          style={(() => {
+            const rect = containerRef.current?.getBoundingClientRect();
+            if (!rect) return {};
+            const dropdownHeight = 288; // h-72 = 18rem = 288px
+            const shouldFlipUp = rect.bottom > window.innerHeight * 2 / 3;
+            return {
+              top: (shouldFlipUp ? rect.top - dropdownHeight - 4 : rect.bottom + 4) + 'px',
+              left: rect.left + 'px',
+              width: containerRef.current.offsetWidth + 'px',
+            };
+          })()}
         >
           <div className="flex h-72">
             {/* 左侧：一级分类 */}

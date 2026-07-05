@@ -16,9 +16,6 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
   // 当前选中的标签
   const [activeTab, setActiveTab] = useState('expense')
 
-  // 统一日期（默认为今天）
-  const [billDate, setBillDate] = useState(new Date().toISOString().split('T')[0])
-
   // 统一成员（一次记录一个成员的多个账单）
   const [globalMemberId, setGlobalMemberId] = useState('')
 
@@ -33,7 +30,6 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
   useEffect(() => {
     if (isOpen) {
       setActiveTab('expense')
-      setBillDate(new Date().toISOString().split('T')[0])
       setGlobalMemberId('')
       setRecords([createEmptyRecord()])
       setShowSuccess(false)
@@ -51,13 +47,14 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
     { id: 'income', label: '收入' },
   ]
 
-  // 创建空记录
+  // 创建空记录（date 默认今天）
   function createEmptyRecord() {
     return {
       amount: '',
       categoryId: '',
       subCategoryId: '',
       memberId: '',
+      date: new Date().toISOString().split('T')[0],
       project: '',
       note: '',
     }
@@ -112,9 +109,14 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
     updateRecord(index, 'subCategoryId', subCategoryId || '')
   }
 
-  // 添加新记录
+  // 添加新记录（日期默认取上一行的日期）
   const addRecord = () => {
-    setRecords(prev => [...prev, createEmptyRecord()])
+    setRecords(prev => {
+      const lastRecord = prev[prev.length - 1]
+      const newRecord = createEmptyRecord()
+      newRecord.date = lastRecord?.date || newRecord.date
+      return [...prev, newRecord]
+    })
   }
 
   // 删除记录
@@ -166,7 +168,7 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
         categoryId: parseInt(r.categoryId),
         subCategoryId: r.subCategoryId ? parseInt(r.subCategoryId) : null,
         memberId: parseInt(globalMemberId),
-        billDate: billDate,
+        billDate: r.date,
         project: r.project,
         note: r.note,
       }))
@@ -214,7 +216,7 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
       )}
 
       {/* 主弹窗内容 */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-[95vw] max-h-[95vh] overflow-hidden flex flex-col">
         {/* 标题栏 */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
           <h3 className="text-lg font-semibold text-blue-600">记多笔</h3>
@@ -246,17 +248,8 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
           ))}
         </div>
 
-        {/* 日期和成员选择 */}
+        {/* 成员选择 */}
         <div className="px-6 py-3 border-b border-gray-100 shrink-0 flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">记账日期</span>
-            <input
-              type="date"
-              value={billDate}
-              onChange={(e) => setBillDate(e.target.value)}
-              className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500"
-            />
-          </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">成员</span>
             <select
@@ -276,9 +269,10 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
         <div className="flex-1 overflow-y-auto p-4">
           {/* 表头 */}
           <div className="grid grid-cols-12 gap-3 mb-2 text-xs text-gray-500 font-medium px-1">
-            <div className="col-span-5">分类</div>
-            <div className="col-span-3">金额</div>
-            <div className="col-span-3">项目/备注</div>
+            <div className="col-span-2">日期</div>
+            <div className="col-span-3">分类</div>
+            <div className="col-span-2">金额</div>
+            <div className="col-span-4">项目/备注</div>
             <div className="col-span-1"></div>
           </div>
 
@@ -289,8 +283,18 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
                 key={index}
                 className="grid grid-cols-12 gap-3 items-center bg-gray-50 rounded-lg p-2"
               >
+                {/* 日期 */}
+                <div className="col-span-2">
+                  <input
+                    type="date"
+                    value={record.date}
+                    onChange={(e) => updateRecord(index, 'date', e.target.value)}
+                    className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
                 {/* 分类选择 */}
-                <div className="col-span-5">
+                <div className="col-span-3">
                   <CategorySelector
                     categories={categories}
                     type={activeTab}
@@ -302,7 +306,7 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
                 </div>
 
                 {/* 金额 */}
-                <div className="col-span-3">
+                <div className="col-span-2">
                   <input
                     type="number"
                     step="0.01"
@@ -315,7 +319,7 @@ function MultiAddRecordModal({ isOpen, onClose, onSuccess }) {
                 </div>
 
                 {/* 项目/备注 */}
-                <div className="col-span-3 flex gap-1">
+                <div className="col-span-4 flex gap-1">
                   <input
                     type="text"
                     value={record.project}
